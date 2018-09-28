@@ -44,8 +44,9 @@ module TimeBandits
               output << " [ #{cmd.to_s.upcase} ]"
             end
           end
-
-          debug output
+          if Thread.current[:message_uuid]
+            debug output
+          end
         end
       end
       Subscriber.attach_to(:redis)

@@ -44,9 +44,21 @@ module TimeBandits
               output << " [ #{cmd.to_s.upcase} ]"
             end
           end
-          if Thread.current[:message_uuid]
+          if logging_allowed?    # to verify whether logging is permissible
             debug output
           end
+        end
+
+        private
+        # The debug logs are printed only for the foreground jobs and for the background jobs with job id
+        # Because the log lines increases exponentially for the background jobs while doing redis calls for the
+        # presence of message in sidekiq job queues
+        def logging_allowed?
+          value = false
+          if !::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])
+            value = true
+          end
+          value
         end
       end
       Subscriber.attach_to(:redis)

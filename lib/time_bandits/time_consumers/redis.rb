@@ -44,9 +44,8 @@ module TimeBandits
               output << " [ #{cmd.to_s.upcase} ]"
             end
           end
-          if logging_allowed?    # to verify whether logging is permissible
-            debug output
-          end
+          # to verify whether logging is permissible
+          debug output if logging_allowed?
         end
 
         private
@@ -54,11 +53,7 @@ module TimeBandits
         # Because the log lines increases exponentially for the background jobs while doing redis calls for the
         # presence of message in sidekiq job queues
         def logging_allowed?
-          value = false
-          if !::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])
-            value = true
-          end
-          value
+          (!::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])) ? true : false
         end
       end
       Subscriber.attach_to(:redis)

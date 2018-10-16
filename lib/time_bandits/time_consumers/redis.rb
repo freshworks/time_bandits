@@ -53,7 +53,7 @@ module TimeBandits
         # Because the log lines increases exponentially for the background jobs while doing redis calls for the
         # presence of message in sidekiq job queues
         def logging_allowed?
-          (!::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])) ? true : false
+          (!::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])) && ENV["TIME_BANDITS_VERBOSE"] == "true" ? true : false
         end
       end
       Subscriber.attach_to(:redis)

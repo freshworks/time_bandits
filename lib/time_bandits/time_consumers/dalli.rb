@@ -1,63 +1,55 @@
-if Rails::VERSION::STRING =~ /\A4.[0123]/
-  require "time_bandits/monkey_patches/active_support_cache_store"
-end
+# a time consumer implementation for memchached
+# install into application_controller.rb with the line
+#
+#   time_bandit TimeBandits::TimeConsumers::Memcached
+#
 
-module TimeBandits::TimeConsumers
-  class Dalli < BaseConsumer
-    prefix :memcache
-    fields :time, :calls, :misses, :reads, :writes
-    format "Dalli: %.3f(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls
+require "time_bandits/monkey_patches/client"
 
-    if Rails::VERSION::STRING >= "4.0" && Rails::VERSION::STRING < "4.2" && Rails.cache.class.respond_to?(:instrument=)
-      # Rails 4 mem_cache_store (which uses dalli internally), unlike dalli_store, is not instrumented by default
-      def reset
-        Rails.cache.class.instrument = true
-        super
+module TimeBandits
+  module TimeConsumers
+    class Dalli < BaseConsumer
+      prefix :memcache
+      fields :time, :calls, :misses, :reads, :writes, :key
+      format "Dalli: %.3f(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls
+
+      class Subscriber < ActiveSupport::LogSubscriber
+        def get(event)
+          #binding.pry
+          i = Dalli.instance
+          i.time += event.duration
+          i.calls += 1
+          payload = event.payload
+          i.reads += payload[:reads]
+          i.misses += payload[:misses]
+          binding.pry
+          return unless logger.debug?
+          message = event.payload[:misses] == 0 ? "Hit:" : "Miss:"
+          logging(event,message)
+        end
+        def set(event)
+          i = Dalli.instance
+          i.time += event.duration
+          i.calls += 1
+          i.writes += 1
+          return unless logger.debug?
+          message = "Write:"
+          binding.pry
+          logging(event,message)
+        end
+
+        private
+        def logging(event,message)
+          name = "%s (%.2fms)" % ["MemCache", event.duration]
+          cmd = event.payload[:key]
+          # output = "  #{color(name, CYAN, true)}"
+          output = "  #{name}"
+          output << " [#{message}#{cmd.to_s}]"
+          debug output
+        end
+
       end
+      Subscriber.attach_to :dalli
     end
-
-    class Subscriber < ActiveSupport::LogSubscriber
-      # cache events are: read write fetch_hit generate delete read_multi increment decrement clear
-      def cache_read(event)
-        i = cache(event)
-        i.reads += 1
-        i.misses += 1 unless event.payload[:hit]
-      end
-
-      def cache_read_multi(event)
-        i = cache(event)
-        i.reads += event.payload[:key].size
-      end
-
-      def cache_write(event)
-        i = cache(event)
-        i.writes += 1
-      end
-
-      def cache_increment(event)
-        i = cache(event)
-        i.writes += 1
-      end
-
-      def cache_decrement(event)
-        i = cache(event)
-        i.writes += 1
-      end
-
-      def cache_delete(event)
-        i = cache(event)
-        i.writes += 1
-      end
-
-      private
-      def cache(event)
-        i = Dalli.instance
-        i.time += event.duration
-        i.calls += 1
-        i
-      end
-    end
-    Subscriber.attach_to :active_support
   end
-
 end

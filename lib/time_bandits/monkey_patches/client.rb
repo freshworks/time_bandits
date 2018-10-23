@@ -1,6 +1,6 @@
 # Add this line to your ApplicationController (app/controllers/application_controller.rb)
 # to enable logging for memcached:
-# time_bandit TimeBandits::TimeConsumers::Client
+# time_bandit TimeBandits::TimeConsumers::Dalli
 
 require 'dalli'
 

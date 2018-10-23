@@ -1,7 +1,7 @@
-# a time consumer implementation for memchached
+# a time consumer implementation for memchached(Dalli)
 # install into application_controller.rb with the line
 #
-#   time_bandit TimeBandits::TimeConsumers::Memcached
+#   time_bandit TimeBandits::TimeConsumers::Dalli
 #
 
 require "time_bandits/monkey_patches/client"

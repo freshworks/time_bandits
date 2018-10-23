@@ -96,11 +96,9 @@ module ActionController #:nodoc:
     def process_action(event)
       payload   = event.payload
       additions = ActionController::Base.log_process_action(payload)
-      custom_addition = additions_for_custom_logging(additions)
-      #binding.pry
       Thread.current.thread_variable_set(
           :time_bandits_completed_info,
-          [ event.duration, custom_addition, payload[:view_runtime], "#{payload[:controller]}##{payload[:action]}" ]
+          [ event.duration, additions, payload[:view_runtime], "#{payload[:controller]}##{payload[:action]}" ]
       )
 
       # this is an ugly hack to ensure completed lines show up in the test logs
@@ -116,17 +114,6 @@ module ActionController #:nodoc:
       message << " (#{additions.join(" | ")})" unless additions.blank?
 
       info(message)
-    end
-
-    private
-    def additions_for_custom_logging(additions)
-      #additions.slice!(1..2)
-      additions.delete_if { |x| x.downcase.include? "dalli" }
-
-      payload = TimeBandits.metrics
-      memcache = "MC: #{payload[:memcache_time].round(2)}(#{payload[:memcache_reads]}r,#{payload[:memcache_misses]}m,#{payload[:memcache_writes]}w,#{payload[:memcache_calls]}c)"
-      additions.insert(1,memcache)
-      additions
     end
   end
 

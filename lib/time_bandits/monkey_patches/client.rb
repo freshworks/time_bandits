@@ -4,7 +4,7 @@
 
 require 'dalli'
 
-raise "Client needs to be loaded before monkey patching it" unless defined?(Dalli)
+raise "Dalli needs to be loaded before monkey patching it" unless defined?(Dalli)
 
 
 module Dalli
@@ -20,7 +20,6 @@ module Dalli
           end
           payload[:misses] = num_keys - results.size
           results
-          #binding.pry
         else
           val = nil
           payload[:reads] = 1
@@ -29,10 +28,9 @@ module Dalli
             val = get_without_benchmark(key, options)
           rescue Dalli::NotFound
           end
-          payload[:misses] = 1  if val.is_a? NullObject
+          payload[:misses] = 1  if val.is_a?(NullObject) || val.blank?
           payload[:key] = key
           val
-          binding.pry
         end
       end
     end
@@ -40,7 +38,8 @@ module Dalli
     alias_method :get, :get_with_benchmark
 
     def set_with_benchmark(*args)
-      ActiveSupport::Notifications.instrument("set.dalli") do
+      ActiveSupport::Notifications.instrument("set.dalli") do |payload|
+        payload[:key] = args[0]
         set_without_benchmark(*args)
       end
     end

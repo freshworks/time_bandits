@@ -10,7 +10,7 @@ module TimeBandits
     class Redis < BaseConsumer
       prefix :redis
       fields :time, :calls
-      format "Redis: %.3f(%d)", :time, :calls
+      format "Redis: %.3fms(%dc)", :time, :calls
 
       class Subscriber < ActiveSupport::LogSubscriber
         def request(event)
@@ -49,10 +49,14 @@ module TimeBandits
         end
 
         private
-        # The debug logs are printed only for the foreground jobs and for the background jobs with job id
+
+        #The Logging can be enabled in verbose mode and it is default for development environment
+        # The debug logs are printed only for the foreground jobs and for the background jobs with job id.
         # Because the log lines increases exponentially for the background jobs while doing redis calls for the
         # presence of message in sidekiq job queues
+
         def logging_allowed?
+          ENV["TIME_BANDITS_VERBOSE"] = "true" if Rails.env.development?
           (!::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])) && ENV["TIME_BANDITS_VERBOSE"] == "true" ? true : false
         end
       end

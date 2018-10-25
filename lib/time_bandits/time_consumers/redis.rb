@@ -56,7 +56,6 @@ module TimeBandits
         # presence of message in sidekiq job queues
 
         def logging_allowed?
-          ENV["TIME_BANDITS_VERBOSE"] = "true" if Rails.env.development?
           (!::Sidekiq.server? || (::Sidekiq.server? && Thread.current[:message_uuid])) && ENV["TIME_BANDITS_VERBOSE"] == "true" ? true : false
         end
       end

@@ -15,6 +15,7 @@ module TimeBandits
     autoload :MemCache,          'time_bandits/time_consumers/mem_cache'
     autoload :Memcached,         'time_bandits/time_consumers/memcached'
     autoload :Dalli,             'time_bandits/time_consumers/dalli'
+    autoload :CustomDalli,       'time_bandits/time_consumers/custom_dalli'
     autoload :Redis,             'time_bandits/time_consumers/redis'
     autoload :Sequel,            'time_bandits/time_consumers/sequel'
     autoload :Beetle,            'time_bandits/time_consumers/beetle'

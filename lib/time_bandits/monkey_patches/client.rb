@@ -34,6 +34,7 @@ module Dalli
         end
       end
     end
+
     alias_method :get_without_benchmark, :get
     alias_method :get, :get_with_benchmark
 
@@ -43,7 +44,9 @@ module Dalli
         set_without_benchmark(*args)
       end
     end
+
     alias_method :set_without_benchmark, :set
     alias_method :set, :set_with_benchmark
+
   end
 end

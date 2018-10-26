@@ -17,9 +17,6 @@ module TimeBandits
           i = Redis.instance
           i.time += event.duration
           i.calls += 1 #count redis round trips, not calls
-
-          return unless logger.debug?
-
           name = "%s (%.2fms)" % ["Redis", event.duration]
           cmds = event.payload[:commands]
 

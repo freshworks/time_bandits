@@ -19,7 +19,6 @@ module TimeBandits
           payload = event.payload
           i.reads += payload[:reads]
           i.misses += payload[:misses]
-          return unless logger.debug?
           message = event.payload[:misses] == 0 ? "Hit:" : "Miss:"
           logging(event, message) if logging_allowed?
         end
@@ -29,7 +28,6 @@ module TimeBandits
           i.time += event.duration
           i.calls += 1
           i.writes += 1
-          return unless logger.debug?
           message = "Write:"
           logging(event, message) if logging_allowed?
         end

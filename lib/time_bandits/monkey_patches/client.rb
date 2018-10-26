@@ -1,6 +1,6 @@
 # Add this line to your ApplicationController (app/controllers/application_controller.rb)
 # to enable logging for memcached:
-# time_bandit TimeBandits::TimeConsumers::Dalli
+# time_bandit TimeBandits::TimeConsumers::DalliCustom
 
 require 'dalli'
 
@@ -14,20 +14,14 @@ module Dalli
         if key.is_a?(Array)
           payload[:reads] = (num_keys = key.size)
           results = []
-          begin
-            results = get_without_benchmark(key, options)
-          rescue Dalli::NotFound
-          end
+          results = get_without_benchmark(key, options)
           payload[:misses] = num_keys - results.size
           results
         else
           val = nil
           payload[:reads] = 1
           payload[:misses] = 0
-          begin
-            val = get_without_benchmark(key, options)
-          rescue Dalli::NotFound
-          end
+          val = get_without_benchmark(key, options)
           payload[:misses] = 1  if val.is_a?(NullObject) || val.blank?
           payload[:key] = key
           val

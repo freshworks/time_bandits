@@ -6,7 +6,7 @@ module TimeBandits::TimeConsumers
   class Dalli < BaseConsumer
     prefix :memcache
     fields :time, :calls, :misses, :reads, :writes
-    format "CustomDalli: %.3f(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls
+    format "Dalli: %.3f(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls
 
     if Rails::VERSION::STRING >= "4.0" && Rails::VERSION::STRING < "4.2" && Rails.cache.class.respond_to?(:instrument=)
       # Rails 4 mem_cache_store (which uses dalli internally), unlike dalli_store, is not instrumented by default

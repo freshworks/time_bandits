@@ -10,7 +10,7 @@ module TimeBandits
     class CustomDalli < BaseConsumer
       prefix :memcache
       fields :time, :calls, :misses, :reads, :writes, :key, :dup_reads, :dup_writes
-      format "MC: %.3fms(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls, :dup_reads, :dup_writes
+      format "MC: %.3fms(%dr,%dm,%dw,%dc,%ddr,%ddw)", :time, :reads, :misses, :writes, :calls, :dup_reads, :dup_writes
       class Subscriber < ActiveSupport::LogSubscriber
         #get and set are the different cache events instrumented here
         def get(event)
@@ -30,7 +30,7 @@ module TimeBandits
           i.time += event.duration
           i.calls += 1
           i.writes += 1
-          i.dup_writes += 1 if MemcacheDuplicateCounter.key_already_exists?(event.payload[:key], "write")
+          i.dup_writes += 1 if DalliDuplicateCounter.key_already_exists?(event.payload[:key], "write")
           message = "Write:"
           logging(event, message) if logging_allowed?
         end

@@ -13,7 +13,7 @@ module DalliDuplicateCounter
 
   
   private
-  def get_counter(operation)
+  def self.get_counter(operation)
     if "read".eql? operation
       return CustomRequestStore.store[:duplicate_read_counter] ||
           CustomRequestStore.store[:duplicate_read_counter] = {}

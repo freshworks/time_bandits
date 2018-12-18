@@ -4,12 +4,13 @@
 #   time_bandit TimeBandits::TimeConsumers::CustomDalli
 #
 require "time_bandits/monkey_patches/client"
+require "dalli_duplicate_counter"
 module TimeBandits
   module TimeConsumers
     class CustomDalli < BaseConsumer
       prefix :memcache
-      fields :time, :calls, :misses, :reads, :writes, :key
-      format "MC: %.3fms(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls
+      fields :time, :calls, :misses, :reads, :writes, :key, :dup_reads, :dup_writes
+      format "MC: %.3fms(%dr,%dm,%dw,%dc)", :time, :reads, :misses, :writes, :calls, :dup_reads, :dup_writes
       class Subscriber < ActiveSupport::LogSubscriber
         #get and set are the different cache events instrumented here
         def get(event)
@@ -19,7 +20,8 @@ module TimeBandits
           payload = event.payload
           i.reads += payload[:reads]
           i.misses += payload[:misses]
-          message = event.payload[:misses] == 0 ? "Hit:" : "Miss:"
+          i.dup_reads += 1 if DalliDuplicateCounter.key_already_exists?(payload[:key], "read")
+          message = event.payload[:misses] == 0 && payload[:exception].nil? ? "Hit:" : "Miss:"
           logging(event, message) if logging_allowed?
         end
 
@@ -28,6 +30,7 @@ module TimeBandits
           i.time += event.duration
           i.calls += 1
           i.writes += 1
+          i.dup_writes += 1 if MemcacheDuplicateCounter.key_already_exists?(event.payload[:key], "write")
           message = "Write:"
           logging(event, message) if logging_allowed?
         end

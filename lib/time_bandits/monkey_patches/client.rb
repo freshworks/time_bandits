@@ -21,9 +21,9 @@ module Dalli
           val = nil
           payload[:reads] = 1
           payload[:misses] = 0
+          payload[:key] = key
           val = get_without_benchmark(key, options)
           payload[:misses] = 1  if val.is_a?(NullObject) || val.blank?
-          payload[:key] = key
           val
         end
       end
